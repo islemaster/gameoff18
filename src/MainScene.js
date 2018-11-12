@@ -1,42 +1,74 @@
-import Phaser from 'phaser';
+import Phaser from 'phaser'
+import Wheel from './Wheel'
 
-var t = 0;
+const WIDTH = 720;
+const HEIGHT = 400;
 
 export default class MainScene extends Phaser.Scene {
-    preload() {
+  preload () {
+    this.load.image('backdrop', 'assets/backdrop.png');
+    this.load.image('ground', 'assets/ground.png');
+    this.load.image('ticker_tape', 'assets/ticker_tape.png');
+    this.load.image('wheel', 'assets/wheel.png');
+  }
 
+  create() {
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wheelVelocity = 0;
+
+    this.backdrop= this.add.tileSprite(
+      WIDTH / 2,
+      HEIGHT / 2,
+      WIDTH,
+      HEIGHT,
+      'backdrop'
+    );
+    this.wheel = new Wheel(this, WIDTH / 2, HEIGHT - 140);
+    this.add.existing(this.wheel);
+
+    this.ground = this.add.tileSprite(
+      WIDTH / 2,
+      HEIGHT - (25/2),
+      WIDTH,
+      25,
+      'ground'
+    )
+
+    this.tickerTape = this.add.tileSprite(
+      WIDTH / 2,
+      30,
+      WIDTH,
+      48,
+      'ticker_tape'
+    );
+    this.add
+      .text(
+        WIDTH / 2,
+        30,
+        `year 2`,
+        {
+          font: '20px monospace',
+          color: '#454545'
+        }
+      )
+      .setOrigin(0.5, 0.5)
+  }
+
+  update () {
+    if (this.cursors.left.isDown) {
+      this.wheelVelocity = Math.max(-10, this.wheelVelocity - 0.5);
+    } else if (this.cursors.right.isDown) {
+      this.wheelVelocity = Math.min(10, this.wheelVelocity + 0.5);
+    } else {
+      this.wheelVelocity *= 0.9;
+      if (Math.abs(this.wheelVelocity) < 0.1) {
+        this.wheelVelocity = 0;
+      }
     }
-
-    create() {
-        this.add
-            .text(
-                this.game.renderer.width / 2,
-                this.game.renderer.height * 3 / 4,
-                `Here's a\ntemplate string.`, {
-                    font: "40px monospace",
-                    color: "white"
-                })
-            .setOrigin(0.5, 0.5)
-            .setShadow(3, 3, "#5588EE", 0, true, true);
-    }
-
-    update() {
-        t = t + 1;
-        const r = this.game.renderer.width / 2;
-        var graphics = this.add.graphics({ lineStyle: { width: 2, color: 0xff0000 } });
-        graphics.strokeEllipseShape(new Phaser.Geom.Ellipse(r, r, 2 * r, 2 * r));
-        graphics.beginPath();
-
-        graphics.moveTo(r + -r * Math.cos(t), r + -r * Math.sin(t));
-        graphics.lineTo(r + r * Math.cos(t), r + r * Math.sin(t));
-
-        graphics.moveTo(r + -r * Math.cos(t + Math.PI / 3), r + -r * Math.sin(t + Math.PI / 3));
-        graphics.lineTo(r + r * Math.cos(t + Math.PI / 3), r + r * Math.sin(t + Math.PI / 3));
-
-        graphics.moveTo(r + -r * Math.cos(t + 2 * Math.PI / 3), r + -r * Math.sin(t + 2 * Math.PI / 3));
-        graphics.lineTo(r + r * Math.cos(t + 2 * Math.PI / 3), r + r * Math.sin(t + 2 * Math.PI / 3));
-
-        graphics.closePath();
-        graphics.strokePath();
-    }
+    const r = 150;
+    const c = 2 * Math.PI * r;
+    const pxPerDeg = c / 360;
+    this.wheel.angle += this.wheelVelocity / pxPerDeg;
+    this.ground.tilePositionX += this.wheelVelocity;
+  }
 }
